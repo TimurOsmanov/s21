@@ -1,0 +1,19 @@
+Ответь на вопрос: на какой destination MAC-адрес отправляется ICMP-запрос?
+
+Ответ: 
+01:00:5e:7f:ff:fa
+
+Frame 5: 114 bytes on wire (912 bits), 114 bytes captured (912 bits)
+Ethernet II, Src: c4:01:e0:af:00:00 (c4:01:e0:af:00:00), Dst: IPv4mcast_7f:ff:fa (01:00:5e:7f:ff:fa)
+    Destination: IPv4mcast_7f:ff:fa (01:00:5e:7f:ff:fa)
+        Address: IPv4mcast_7f:ff:fa (01:00:5e:7f:ff:fa)
+        .... ..0. .... .... .... .... = LG bit: Globally unique address (factory default)
+        .... ...1 .... .... .... .... = IG bit: Group address (multicast/broadcast)
+    Source: c4:01:e0:af:00:00 (c4:01:e0:af:00:00)
+        Address: c4:01:e0:af:00:00 (c4:01:e0:af:00:00)
+        .... ..0. .... .... .... .... = LG bit: Globally unique address (factory default)
+        .... ...0 .... .... .... .... = IG bit: Individual address (unicast)
+    Type: IPv4 (0x0800)
+Internet Protocol Version 4, Src: 10.1.1.1, Dst: 239.255.255.250
+Internet Control Message Protocol
+

@@ -1,0 +1,20 @@
+На какой MAC адрес в первом ARP пакете отправляется запрос? 
+
+Ответ 1:
+ff:ff:ff:ff:ff:ff
+
+Frame 4: 60 bytes on wire (480 bits), 60 bytes captured (480 bits)
+Ethernet II, Src: c4:01:e0:af:00:00 (c4:01:e0:af:00:00), Dst: Broadcast (ff:ff:ff:ff:ff:ff)
+    Destination: Broadcast (ff:ff:ff:ff:ff:ff)
+        Address: Broadcast (ff:ff:ff:ff:ff:ff)
+        .... ..1. .... .... .... .... = LG bit: Locally administered address (this is NOT the factory default)
+        .... ...1 .... .... .... .... = IG bit: Group address (multicast/broadcast)
+    Source: c4:01:e0:af:00:00 (c4:01:e0:af:00:00)
+    Type: ARP (0x0806)
+    Padding: 000000000000000000000000000000000000
+Address Resolution Protocol (request)
+
+Как называется данный адрес? 
+Ответ 2:
+Broadcast MAC address
+
