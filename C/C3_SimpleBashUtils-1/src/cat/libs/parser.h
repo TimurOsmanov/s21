@@ -4,5 +4,6 @@
 int parse_short_options(char *opt_short, char all_opt[]);
 int parse_long_option(char *opt_long, char all_opt[]);
 int parse_args(int argc, char *argv[], char all_opt[], char *files_ptr[]);
+void expand_e_b_t_flags(char all_opt[]);
 
 #endif

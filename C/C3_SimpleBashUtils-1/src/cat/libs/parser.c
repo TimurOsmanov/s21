@@ -3,14 +3,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#define CORR_OPT_NUM 8
+#define CORR_OPT_NUM 9
 #define LONG_OPT_NUM 4
 #define LONG_OPT_LEN 18
 
 int parse_short_options(char *opt_short, char all_opt[]) {
     int i = 1;
     int option_state = 0;
-    char correct_options[CORR_OPT_NUM] = "sbnetvET";
+    char correct_options[CORR_OPT_NUM] = "EsbnTvet_";
 
     while (opt_short[i] != '\0') {
         option_state = 0;
@@ -23,8 +23,9 @@ int parse_short_options(char *opt_short, char all_opt[]) {
             }
         }
         if (!option_state) {
-            printf("cat: invalid option -- '%c'\n", opt_short[i]);
-            printf("Try 'cat --help' for more information.\n");
+            fprintf(stderr, "cat: invalid option -- '%c'\n", opt_short[i]);
+            fprintf(stderr, "Try 'cat --help' for more information.\n");
+            all_opt[8] = 'w';
             break;
         }
         i++;
@@ -40,16 +41,17 @@ int parse_long_option(char *opt_long, char all_opt[]) {
         option_state = 0;
         if (!strcmp(opt_long, (const char *)&correct_options[i])) {
             option_state = 1;
-            if (i == 0) all_opt[i] = 's';
-            if (i == 1) all_opt[i] = 'b';
-            if (i == 2) all_opt[i] = 'n';
+            if (i == 0) all_opt[1] = 's';
+            if (i == 1) all_opt[2] = 'b';
+            if (i == 2) all_opt[3] = 'n';
             if (i == 3) all_opt[5] = 'v';
             break;
         }
     }
     if (!option_state) {
-        printf("cat: unrecognized option '%s'\n", opt_long);
-        printf("Try 'cat --help' for more information.\n");
+        fprintf(stderr, "cat: unrecognized option '%s'\n", opt_long);
+        fprintf(stderr, "Try 'cat --help' for more information.\n");
+        all_opt[8] = 'w';
     }
     return option_state;
 }
@@ -71,4 +73,18 @@ int parse_args(int argc, char *argv[], char all_opt[], char *files_ptr[]) {
         }
     }
     return option_state;
+}
+
+void expand_e_b_t_flags(char all_opt[]) {
+    if (all_opt[2] == 'b') all_opt[3] = '_';
+    if (all_opt[6] == 'e') {
+        all_opt[0] = 'E';
+        all_opt[5] = 'v';
+        all_opt[6] = '_';
+    }
+    if (all_opt[7] == 't') {
+        all_opt[4] = 'T';
+        all_opt[5] = 'v';
+        all_opt[7] = '_';
+    }
 }

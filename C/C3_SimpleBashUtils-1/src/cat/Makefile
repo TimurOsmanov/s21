@@ -1,15 +1,18 @@
 CC=gcc
-CFLAGS=-Wall -Werror -Wextra -std=c11 
+CFLAGS=-Wall -Werror -Wextra -std=c11 -pedantic
+filename = "test5_0blank_sof_0blank_eof.txt"
+options1 = test/$(filename) -be wrong_file_name test/$(filename)
+# options2 = bytes.txt -be
+options2 = bytes.txt -z
+options = $(options2)
 
-options = txts/test.txt -b wrong_file_name txts/test2.txt
-
-all:  clean s21_cat valgrind clang run cat
+all:  clean s21_cat valgrind clang run cat diff
 
 clean:
 	-rm -r s21_cat
 
 s21_cat: 
-	$(CC) $(CFLAGS) s21_cat.c libs/*.c -o s21_cat -pedantic 
+	$(CC) $(CFLAGS) s21_cat.c libs/*.c -o s21_cat
 
 valgrind:
 	# ver 3.23
@@ -27,4 +30,6 @@ cat:
 	-cat $(options)
 
 diff:
+	./s21_cat $(options) > cat1.txt
+	-cat $(options) > cat2.txt
 	diff cat1.txt cat2.txt
