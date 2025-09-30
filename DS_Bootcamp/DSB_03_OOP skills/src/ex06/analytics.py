@@ -50,7 +50,7 @@ class Research:
     def tg_msg(text: str):
         bot_token: str = 'your bot'
         chat_id: str = 'your chat'
-        webhook: str = f'https://api.telegram.org/{bot_token}/sendMessage?chat_id={chat_id}&text={text}'
+        webhook: str = f'https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={text}'
         requests.get(webhook)
         logging.info(f"class Research method tg_msg")
 
