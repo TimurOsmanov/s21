@@ -3,7 +3,7 @@ import config
 
 
 def main() -> None:
-    obj: analytics.Research() = analytics.Research()
+    obj: analytics.Research() = analytics.Research() # type: ignore
     data: list = obj.file_reader()
 
     try:
