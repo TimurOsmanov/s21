@@ -119,24 +119,24 @@ Therefore, the script always clears the rules first (iptables -F; iptables -X) t
 *Check: nmap output should say: `Host is up`*.
 ![linux_network](data/14.png)<br><br>
 
+#### 5.1. Configuration of machine addresses
 
 #### Start five virtual machines (3 workstations (ws11, ws21, ws22) and 2 routers (r1, r2))
 Net: \
 ![part5_network](../misc/images/part5_network.png)
-#### 5.1. Configuration of machine addresses
-#### Set up the machine configurations in *etc/netplan/00-installer-config.yaml* according to the network in the picture.
-- Adapter 2 in VirtualBox for ws11, ws21, ws22 - inet_ws (chose name by yourself)
-- Adapter 2 in VirtualBox for r1, r2 - inet_ws 
-- Adapter 3 in VirtualBox for r1, r2 - inet_router (chose name by yourself)
 
-- ws11 + r1<br><br>
-![linux_network](data/15.png)<br><br>
-- ws21 + ws22 + r2 <br><br>
-![linux_network](data/16.png)<br><br>
+#### Set up the machine configurations in *etc/netplan/00-installer-config.yaml* according to the network in the picture.
+- Adapter 1 in VirtualBox for ws11, ws21, ws22, r1, r2 - NAT / default route (Internet)
+- Adapter 2 in VirtualBox for ws11, ws21, ws22, r1 - inet_ws (chose name by yourself)
+- Adapter 2 in VirtualBox for r2 - inet_router (chose name by yourself)
+- Adapter 3 in VirtualBox for r1, r2 - inet_router, inet_ws
 
 #### Restart the network service. If there are no errors, check that the machine address is correct with the `ip -4 a`command. Also ping ws22 from ws21. Similarly ping r1 from ws11.
-![linux_network](data/17.png)<br><br>
 
+- ws11 + r1<br><br>
+![linux_network](data/15_1.png)<br><br>
+- ws21 + ws22 + r2 <br><br>
+![linux_network](data/15_2.png)<br><br>
 - ping r1 <- ws11 (OK); r2 <- ws11 (failed)<br><br>
 ![linux_network](data/16_1.png)<br><br>
 - ping ws22 <- ws21 (OK); r2 <- ws21 (OK); r1 <- ws21 (failed)<br><br>
@@ -163,17 +163,18 @@ default via 10.10.0.1 dev eth0
 10.10.0.0/18 dev eth0 proto kernel scope link src 10.10.0.2
 ```
 #### Configure the default route (gateway) for the workstations. To do this, add `default` before the router's IP in the configuration file
+#### Call `ip r` and show that a route is added to the routing table
 ![linux_network](data/23.png)<br><br>
 
-#### Call `ip r` and show that a route is added to the routing table
-![linux_network](data/24.png)<br><br>
 #### Ping r2 router from ws11 and show on r2 that the ping is reaching. To do this, use the `tcpdump -tn -i eth0`
 command.
 - r2 -> ws 11<br><br>
 ![linux_network](data/25.png)<br><br>
 
-At this stage, ICMP packets are not passing through because the routers do not have static routes between the 10.10.0.0/18 and 10.20.0.0/?? networks.<br>
-Tcpdump on r2 only shows ARP requests, which confirms the absence of IP routing.
+When pinging from ws11 (10.10.0.2) to r2 (10.100.0.12), ICMP echo request packets successfully reach r2, as evidenced by the tcpdump output.<br>
+ An ARP request from r1 to r2 and an ARP reply from r2 are also visible.<br>
+ However, there are no echo replies because r2 does not have a reverse static route configured to the 10.10.0.0/18 network.<br>
+ This confirms the need to add static routes in the next step.
 
 #### 5.4. Adding static routes
 #### Add static routes to r1 and r2 in configuration file. Here is an example for r1 route to 10.20.0.0/26:
@@ -204,25 +205,28 @@ Here is an example of the **traceroute** utility output after adding a gateway:
 2 10.100.0.12 1 ms 0 ms 1 ms
 3 10.20.0.10 12 ms 1 ms 3 ms
 ```
-- fix internet (enp0s3) to download traceroute<br><br>
-![linux_network](data/fix_internet_2.png)<br><br>
 #### Run the `tcpdump -tnv -i eth0` dump command on r1
 #### Use **traceroute** utility to list routers in the path from ws11 to ws21
+- r1: tcpdump -tnv -i enp0s8<br><br>
 ![linux_network](data/29.png)<br><br>
-- Traceroute determines the path of a packet from the sender to the receiver.<br>
+- (ws11: traceroute 10.20.0.10<br>r1: sudo tcpdump -tnv -i enp0s8 -w file.pcap)<br><br>
+Traceroute determines the path of a packet from the sender to the receiver.<br>
 It sends packets with sequentially increasing TTL (1, 2, 3, etc.). <br>
 Each router decrements the TTL by 1; if TTL=0, it discards the packet and returns a "Time Exceeded" message.<br>
 Traceroute records the IP address of this router. The process is repeated until the packet reaches the final node.<br>
 The result is a list of all intermediate routers and the latency to each.<br><br>
 ![linux_network](data/30.png)<br><br>
+- (ws11: traceroute -I -n 10.20.0.10<br>r1: sudo tcpdump -tnv -i any -w full_trace.pcap)<br><br>
+![linux_network](data/30_1.png)<br><br>
+1. 10.100.0.12 time exceeded ← router
+2. 10.10.0.1 time exceeded ← router
+3. 10.20.0.10 echo reply ← end node
+
 
 #### 5.6. Using **ICMP** protocol in routing
-#### Run on r1 network traffic capture going through eth0 with the
-`tcpdump -n -i eth0 icmp` command.
+#### Run on r1 network traffic capture going through eth0 with the `tcpdump -n -i eth0 icmp` command.
 
-#### Ping a non-existent IP (e.g. *10.30.0.111*) from ws11 with the
-`ping -c 1 10.30.0.111` command.
-- Change netplan config to enable ping in local net<br><br>
+#### Ping a non-existent IP (e.g. *10.30.0.111*) from ws11 with the `ping -c 1 10.30.0.111` command.
 ![linux_network](data/31.png)<br><br>
 
 ## Part 6. Dynamic IP configuration using **DHCP**
