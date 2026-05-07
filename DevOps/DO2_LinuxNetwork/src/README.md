@@ -1,3 +1,12 @@
+3.1. [ipcalc tool](#ipcalc-tool) \
+3.2. [Static routing between two machines](#part-2-static-routing-between-two-machines) \
+3.3. [iperf3 utility](#part-3-iperf3-utility) \
+3.4. [Network firewall](#part-4-network-firewall) \
+3.5. [Static network routing](#part-5-static-network-routing) \
+3.6. [Dynamic IP configuration using DHCP](#part-6-dynamic-ip-configuration-using-dhcp) \
+3.7. [NAT](#part-7-nat) \
+3.8. [Bonus. Introduction to SSH Tunnels](#part-8-bonus-introduction-to-ssh-tunnels)
+
 ## Part 1. ipcalc tool
 
 #### 1.1. Networks and Masks
@@ -56,10 +65,8 @@
 - if no enp0s8 -> add new network via virtualbox -> settings -> net -> Adapter 2
 - same Adapter 2 (intnet) for ws1 and ws2
 #### Describe the network interface corresponding to the internal network on both machines and set the following addresses and masks:<br> ws1 — *192.168.100.10*, mask */16 *, ws2 — *172.24.116.8*, mask */12*
-![linux_network](data/06.png)<br><br>
-
 #### Run the `netplan apply` command to restart the network service
-![linux_network](data/07.png)<br><br>
+![linux_network](data/06.png)<br><br>
 
 #### 2.1. Adding a static route manually
 #### Add a static route from one machine to another and back using a `ip r add` command.
@@ -69,19 +76,13 @@
 #### 2.2. Adding a static route with saving
 #### Restart the machines
 #### Add static route from one machine to another using */etc/netplan/00-installer-config.yaml* file
+<!-- ![linux_network](data/09.png)<br><br> -->
 ![linux_network](data/09.png)<br><br>
-- reboot
+
 #### Ping the connection between the machines
 ![linux_network](data/10.png)<br><br>
 
 ## Part 3. **iperf3** utility
-
-"Now that we have linked two machines, tell me: what is the most important thing about transferring information between machines?"<br>
-"The connection speed?"<br>
-"That's right. We’ll check it with **iperf3** utility."<br><br>
-- fix internet (enp0s3) to download iperf3
-![linux_network](data/fix_internet.png)<br><br>
-
 #### 3.1. Connection speed
 #### Convert and write results in the report: 8 Mbps to MB/s, 100 MB/s to Kbps, 1 Gbps to Mbps
 - 8 Mbps = 1 MB/s
@@ -93,6 +94,7 @@
 ![linux_network](data/11.png)<br><br>
 - (if iperf3 -s dont work - use sudo ufw disable on ws2)
 
+## Part 4. Network firewall
 #### 4.1. **iptables** utility
 #### Create a */etc/firewall.sh* file simulating the firewall on ws1 and ws2:
 ```shell
@@ -119,6 +121,7 @@ Therefore, the script always clears the rules first (iptables -F; iptables -X) t
 *Check: nmap output should say: `Host is up`*.
 ![linux_network](data/14.png)<br><br>
 
+## Part 5. Static network routing
 #### 5.1. Configuration of machine addresses
 
 #### Start five virtual machines (3 workstations (ws11, ws21, ws22) and 2 routers (r1, r2))
@@ -127,20 +130,21 @@ Net: \
 
 #### Set up the machine configurations in *etc/netplan/00-installer-config.yaml* according to the network in the picture.
 - Adapter 1 in VirtualBox for ws11, ws21, ws22, r1, r2 - NAT / default route (Internet)
-- Adapter 2 in VirtualBox for ws11, ws21, ws22, r1 - inet_ws (chose name by yourself)
+- Adapter 2 in VirtualBox for ws11, r1 - inet_ws (chose name by yourself)
+- Adapter 2 in VirtualBox for ws21, ws22 - inet_ws2 (chose name by yourself)
 - Adapter 2 in VirtualBox for r2 - inet_router (chose name by yourself)
-- Adapter 3 in VirtualBox for r1, r2 - inet_router, inet_ws
+- Adapter 3 in VirtualBox for r1, r2 - inet_router, inet_ws2
 
 #### Restart the network service. If there are no errors, check that the machine address is correct with the `ip -4 a`command. Also ping ws22 from ws21. Similarly ping r1 from ws11.
 
 - ws11 + r1<br><br>
-![linux_network](data/15_1.png)<br><br>
+![linux_network](data/15.png)<br><br>
 - ws21 + ws22 + r2 <br><br>
-![linux_network](data/15_2.png)<br><br>
+![linux_network](data/16.png)<br><br>
 - ping r1 <- ws11 (OK); r2 <- ws11 (failed)<br><br>
-![linux_network](data/16_1.png)<br><br>
+![linux_network](data/17.png)<br><br>
 - ping ws22 <- ws21 (OK); r2 <- ws21 (OK); r1 <- ws21 (failed)<br><br>
-![linux_network](data/16_2.png)<br><br>
+![linux_network](data/18.png)<br><br> 
 
 
 #### 5.2. Enabling IP forwarding.
@@ -232,28 +236,126 @@ The result is a list of all intermediate routers and the latency to each.<br><br
 ## Part 6. Dynamic IP configuration using **DHCP**
 
 #### For r2, configure the **DHCP** service in the */etc/dhcp/dhcpd.conf* file:
+(sudo apt install isc-dhcp-server)
 
 #### 1) Specify the default router address, DNS-server and internal network address. Here is an example of a file for r2:
-```shell
-subnet 10.100.0.0 netmask 255.255.0.0 {}
+![linux_network](data/32.png)<br><br>
 
-subnet 10.20.0.0 netmask 255.255.255.192
-{
-    range 10.20.0.2 10.20.0.50;
-    option routers 10.20.0.1;
-    option domain-name-servers 10.20.0.1;
-}
-```
-#### 2) Write `nameserver 8.8.8.8` in a *resolv.conf* file
-- Add screenshots of the changed files to the report.
-#### Restart the **DHCP** service with `systemctl restart isc-dhcp-server`. Reboot the ws21 machine with `reboot` and show with `ip a` that it has got an address. Also ping ws22 from ws21.
-- Add a screenshot with the call and the output of the used commands to the report.
+#### 2) Write `nameserver 8.8.8.8` in a *resolv.conf* file<br>Restart the **DHCP** service with `systemctl restart isc-dhcp-server`.
+![linux_network](data/33.png)<br><br>
 
-#### Specify MAC address at ws11 by adding to *etc/netplan/00-installer-config.yaml*:
-`macaddress: 10:10:10:10:10:BA`, `dhcp4: true`
-- Add a screenshot of the changed *etc/netplan/00-installer-config.yaml* file to the report.
-#### Сonfigure r1 the same way as r2, but make the assignment of addresses strictly linked to the MAC-address (ws11). Run the same tests
-- Describe this part in the report the same way as for r2.
-#### Request IP address update from ws21
-- Add screenshots of IP before and after update to the report;
-- Describe in the report what **DHCP** server options were used in this point.
+#### 3) Change 00-installer-config.yaml and reboot the ws21 machine with `reboot` and show with `ip a` that it has got an address. <br>Also ping ws22 from ws21.
+![linux_network](data/34.png)<br><br>
+
+#### 4) Сonfigure r1 the same way as r2, but make the assignment of addresses strictly linked to the MAC-address (ws11). Run the same tests
+![linux_network](data/35.png)<br><br>
+![linux_network](data/36.png)<br><br>
+
+#### 5) Specify MAC address at ws11 by adding to *etc/netplan/00-installer-config.yaml*: `macaddress: 10:10:10:10:10:BA`, `dhcp4: true`
+![linux_network](data/37.png)<br><br>
+Reboot the ws11 machine with reboot and show with ip a that it has got an address.
+Also ping ws22 from ws11.<br><br>
+![linux_network](data/38.png)<br><br>
+
+#### 6) Request IP address update from ws21
+![linux_network](data/39.png)<br><br>
+
+- sudo dhclient -r enp0s8 to remove the old IP address.
+- sudo dhclient -v enp0s8 to request a new IP address.
+
+## Part 7. **NAT**
+
+disable Adapter1 (NAT)<br>
+![linux_network](data/40.png)<br><br>
+
+##### In */etc/apache2/ports.conf* file change the line `Listen 80` to `Listen 0.0.0.0:80`on ws22 and r1, i.e. make the Apache2 server public
+##### Start the Apache web server with `service apache2 start` command on ws22 and r1
+![linux_network](data/41.png)<br><br>
+
+
+##### Add the following rules to the firewall, created similarly to the firewall from Part 4, on r2:
+##### 1) delete rules in the filter table — `iptables -F`
+##### 2) delete rules in the "NAT" table — `iptables -F -t nat`
+##### 3) drop all routed packets — `iptables --policy FORWARD DROP`
+![linux_network](data/42.png)<br><br>
+
+##### Run the file as in Part 4
+##### Check the connection between ws22 and r1 with the `ping` command
+*When running the file with these rules, ws22 should not ping from r1*<br><br>
+![linux_network](data/43.png)<br><br>
+
+##### Add another rule to the file:
+##### 4) allow routing of all **ICMP** protocol packets
+##### Run the file as in Part 4
+##### Check connection between ws22 and r1 with the `ping` command
+*When running the file with these rules, ws22 should ping from r1*<br><br>
+![linux_network](data/44.png)<br><br>
+![linux_network](data/45.png)<br><br>
+
+
+##### Add two more rules to the file:
+##### 5) enable **SNAT**, which is masquerade all local IP from the local network behind r2 (as defined in Part 5 — network 10.20.0.0)
+*Tip: it is worth thinking about routing internal packets as well as external packets with an established connection*
+##### 6) enable **DNAT** on port 8080 of r2 machine and add external network access to the Apache web server running on ws22
+*Tip: be aware that when you will try to connect, there will be a new tcp connection for ws22 and port 80<br><br>
+![linux_network](data/46.png)<br><br>
+
+##### Run the file as in Part 4
+*Before testing it is recommended to disable the **NAT** network interface in VirtualBox (its presence can be checked with `ip a` command), if it is enabled*
+##### Check the TCP connection for **SNAT** by connecting from ws22 to the Apache server on r1 with the `telnet [address] [port]` command
+##### Check the TCP connection for **DNAT** by connecting from r1 to the Apache server on ws22 with the `telnet` command (address r2 and port 8080)
+![linux_network](data/47.png)<br><br>
+
+
+## Part 8. Bonus. Introduction to **SSH Tunnels**
+
+##### 8.1 Run a firewall on r2 with the rules from Part 7 (22 - SSH)
+![linux_network](data/46.png)<br><br>
+
+##### 8.2 Start the **Apapche** web server on ws22 on localhost only (i.e. in */etc/apache2/ports.conf* file change the line `Listen 80` to `Listen localhost:80`)
+![linux_network](data/48.png)<br><br> 48
+
+##### 8.3 Use *Local TCP forwarding* from ws21 to ws22 to access the web server on ws22 from ws21
+![linux_network](data/49.png)<br><br>
+using 127.0.0.1:8080:localhost:80 - The port was listened to ONLY on the local machine and was not accessible from the outside.
+
+<pre>
+ws21 (client)                    ws22 (server)
+     │                                │
+     │ ──────── establish SSH ───────►│
+     │                                │
+  listen 8080  ◄──────────────────────│
+     │                                │
+  telnet 127.0.0.1:8080               │
+     │                                │
+     │ ────── HTTP request ──────────►│
+     │                                │
+     │ ◄───── HTTP reply  ────────────│
+     │                                │
+     └──────────────►  localhost:80 ──┘
+</pre>
+
+##### 8.4 Use *Remote TCP forwarding* from ws11 to ws22 to access the web server on ws22 from ws11
+<!-- ##### To check if the connection worked in both of the previous steps, go to a second terminal (e.g. with the Alt + F2) and run the `telnet 127.0.0.1 [local port]` command. -->
+![linux_network](data/50.png)<br><br> 
+
+
+<pre>
+ws11 (client)                    ws22 (server)
+     │                                │
+     │ ──────── establish SSH ───────►│
+     │                                │
+     │      "listen port 8080         │
+     │       on yourself"             │
+     │ ──────────────────────────────►│
+     │                                │
+     │                           listen 8080
+     │                                │
+     │                      telnet 127.0.0.1:8080
+     │                                │
+     │ ◄────── HTTP request ──────────│
+     │                                │
+     │ ────── HTTP reply ────────────►│
+     │                                │
+     └────────────── localhost:80 ────┘
+</pre>
