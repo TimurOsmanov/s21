@@ -1,10 +1,10 @@
-1. [ipcalc tool](#ipcalc-tool) \
-2. [Static routing between two machines](#part-2-static-routing-between-two-machines) \
-3. [iperf3 utility](#part-3-iperf3-utility) \
-4. [Network firewall](#part-4-network-firewall) \
-5. [Static network routing](#part-5-static-network-routing) \
-6. [Dynamic IP configuration using DHCP](#part-6-dynamic-ip-configuration-using-dhcp) \
-7. [NAT](#part-7-nat) \
+1. [ipcalc tool](#ipcalc-tool) 
+2. [Static routing between two machines](#part-2-static-routing-between-two-machines) 
+3. [iperf3 utility](#part-3-iperf3-utility) 
+4. [Network firewall](#part-4-network-firewall) 
+5. [Static network routing](#part-5-static-network-routing) 
+6. [Dynamic IP configuration using DHCP](#part-6-dynamic-ip-configuration-using-dhcp) 
+7. [NAT](#part-7-nat) 
 8. [Bonus. Introduction to SSH Tunnels](#part-8-bonus-introduction-to-ssh-tunnels)
 
 ## Part 1. ipcalc tool
